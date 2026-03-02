@@ -1,24 +1,131 @@
----
-title: app.json / app.config.js
-description: A reference of available properties in Expo app config.
-maxHeadingDepth: 5
----
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, StatusBar } from 'react-native';
 
-import { BookOpen02Icon } from '@expo/styleguide-icons/outline/BookOpen02Icon';
+// --- THEME COLORS ---
+const PURPLE = '#6B21A8';
+const AMBER = '#F59E0B';
+const BG = '#F3F4F6';
 
-import schema from '~/public/static/schemas/v54.0.0/app-config-schema.json';
-import AppConfigSchemaTable from '~/ui/components/AppConfigSchemaTable';
-import { BoxLink } from '~/ui/components/BoxLink';
+export default function App() {
+  const [isLocked, setIsLocked] = useState(true);
+  const [pin, setPin] = useState('');
 
-The following is a list of properties that are available for you under the `"expo"` key in **app.json** or **app.config.json**. These properties can be passed to the top level object of **app.config.js** or **app.config.ts**.
+  // Handle PIN Input
+  const handlePin = (num) => {
+    if (pin.length < 4) {
+      const newPin = pin + num;
+      setPin(newPin);
+      if (newPin === '1234') { // Default PIN
+        setTimeout(() => setIsLocked(false), 300);
+      }
+    }
+  };
 
-<BoxLink
-  title="Configuration with app config"
-  description="For information on app configuration, the differences between various app config files, and how to use them dynamically."
-  href="/workflow/configuration/"
-  Icon={BookOpen02Icon}
-/>
+  if (isLocked) {
+    return (
+      <View style={styles.lockContainer}>
+        <StatusBar barStyle="light-content" />
+        <Text style={styles.lockTitle}>Shop Manager PIN</Text>
+        <View style={styles.dotsRow}>
+          {[1, 2, 3, 4].map((_, i) => (
+            <View key={i} style={[styles.dot, pin.length > i && styles.dotFilled]} />
+          ))}
+        </View>
+        <View style={styles.keypad}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '⌫'].map((val) => (
+            <TouchableOpacity key={val} style={styles.key} onPress={() => val === 'C' ? setPin('') : handlePin(val)}>
+              <Text style={styles.keyText}>{val}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  }
 
-## Properties
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView>
+        {/* HEADER */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Shop Dashboard</Text>
+          <Text style={styles.headerSubtitle}>Monday, 2nd March 2026</Text>
+        </View>
 
-<AppConfigSchemaTable schema={schema} />
+        {/* PROFIT CARD */}
+        <View style={styles.profitCard}>
+          <Text style={styles.cardLabel}>Daily Net Profit</Text>
+          <Text style={styles.nairaText}>₦ 45,200.00</Text>
+        </View>
+
+        {/* QUICK ACTIONS */}
+        <View style={styles.grid}>
+          <ActionBtn title="New Sale" icon="🛒" color={PURPLE} />
+          <ActionBtn title="Restock" icon="📦" color={PURPLE} />
+          <ActionBtn title="Debt List" icon="👥" color={AMBER} />
+          <ActionBtn title="Expenses" icon="📉" color={AMBER} />
+        </View>
+
+        {/* STOCK ALERTS */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Low Stock Alerts</Text>
+          <View style={styles.alertItem}>
+            <Text style={styles.itemText}>Indomie Chicken (70g)</Text>
+            <Text style={styles.qtyRed}>2 left</Text>
+          </View>
+          <View style={styles.alertItem}>
+            <Text style={styles.itemText}>Peak Milk (Sachet)</Text>
+            <Text style={styles.qtyRed}>5 left</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* FOOTER NAV */}
+      <View style={styles.nav}>
+        <Text style={styles.navTextActive}>Home</Text>
+        <Text style={styles.navText}>Sales</Text>
+        <Text style={styles.navText}>Inventory</Text>
+        <Text style={styles.navText}>Report</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+// --- SUB-COMPONENTS ---
+const ActionBtn = ({ title, icon, color }) => (
+  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: color }]}>
+    <Text style={styles.actionIcon}>{icon}</Text>
+    <Text style={styles.actionTitle}>{title}</Text>
+  </TouchableOpacity>
+);
+
+// --- STYLES ---
+const styles = StyleSheet.create({
+  lockContainer: { flex: 1, backgroundColor: PURPLE, justifyContent: 'center', alignItems: 'center' },
+  lockTitle: { color: AMBER, fontSize: 22, fontWeight: 'bold', marginBottom: 30 },
+  dotsRow: { flexDirection: 'row', marginBottom: 40 },
+  dot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: AMBER, margin: 10 },
+  dotFilled: { backgroundColor: AMBER },
+  keypad: { flexDirection: 'row', flexWrap: 'wrap', width: 280, justifyContent: 'center' },
+  key: { width: 70, height: 70, margin: 10, borderRadius: 35, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
+  keyText: { color: '#FFF', fontSize: 24, fontWeight: '600' },
+  
+  container: { flex: 1, backgroundColor: BG },
+  header: { padding: 20, paddingTop: 40 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: PURPLE },
+  headerSubtitle: { color: '#6B7280' },
+  profitCard: { margin: 20, padding: 25, backgroundColor: AMBER, borderRadius: 20, elevation: 8 },
+  cardLabel: { color: '#FFF', fontSize: 14, opacity: 0.9 },
+  nairaText: { color: '#FFF', fontSize: 36, fontWeight: 'bold', marginTop: 5 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20 },
+  actionBtn: { width: '48%', height: 100, borderRadius: 15, padding: 15, marginBottom: 15, justifyContent: 'space-between' },
+  actionIcon: { fontSize: 24 },
+  actionTitle: { color: '#FFF', fontWeight: 'bold' },
+  section: { padding: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: PURPLE, marginBottom: 10 },
+  alertItem: { backgroundColor: '#FFF', padding: 15, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  qtyRed: { color: 'red', fontWeight: 'bold' },
+  nav: { height: 60, backgroundColor: '#FFF', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', borderTopWidth: 1, borderColor: '#EEE' },
+  navTextActive: { color: PURPLE, fontWeight: 'bold' },
+  navText: { color: '#9CA3AF' }
+});
